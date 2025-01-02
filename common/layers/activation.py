@@ -9,15 +9,15 @@ class ReLU:
         self.mask = None    # bpass를 위한 값 저장 그릇
 
     def forward(self, x):
-        self.mask = (x <= 0)  # bpass를 위한 값 저장
+        self.mask = (x > 0)  # bpass를 위한 값 저장
 
         y = relu(x)
 
         return y
 
     def backward(self, dy):
-        dy[self.mask] = 0
-        dx = dy
+        dloc = self.mask.astype(np.int32)
+        dx = dloc * dy  # hadmard product
 
         return dx
 
@@ -37,7 +37,7 @@ class Sigmoid:
 
     def backward(self, dy):
         dloc = (1.0 - self.y) * self.y
-        dx = dloc * dy
+        dx = dloc * dy  # hadmard product
 
         return dx
 

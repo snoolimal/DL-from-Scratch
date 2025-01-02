@@ -19,12 +19,14 @@ class SoftmaxWithLoss:
 
         return loss
 
-    def backward(self):     # dy=1
+    def backward(self, dy=1):
         batch_size = self.y.shape[0]
 
-        dx = self.y.copy()
-        dx[np.arange(batch_size), self.t] -= 1
-        dx = dx / batch_size
+        y = self.y.copy()
+        y[np.arange(batch_size), self.t] -= 1
+        dloc = y / batch_size
+
+        dx = dloc * dy
 
         return dx
 
@@ -48,11 +50,12 @@ class SigmoidWithLoss:
 
         return loss
 
-    def backward(self):     # dy=1
+    def backward(self, dy=1):
         batch_size = self.y.shape[0]
 
-        dx = self.y - self.t
-        dx = dx / batch_size
+        dloc = (self.y - self.t) / batch_size
+
+        dx = dloc * dy
 
         return dx
 
@@ -74,10 +77,11 @@ class LinearWithLoss:
 
         return loss
 
-    def backward(self):     # dy=1
+    def backward(self, dy=1):
         batch_size = self.y.shape[0]
 
-        dx = self.y - self.t
-        dx = dx / batch_size
+        dloc = (self.y - self.t) / batch_size
+
+        dx = dloc * dy
 
         return dx

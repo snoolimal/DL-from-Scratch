@@ -24,7 +24,8 @@ def softmax(x):
     if x.ndim == 1:
         x = x.reshape(-1, x.size)
 
-    x -= x.max(axis=1, keepdims=True)  # overflow 방지 (계산 결과는 동일)
+    # overflow 방지 (계산 결과는 동일)
+    x -= x.max(axis=1, keepdims=True)
 
     x = np.exp(x)
     x /= x.sum(axis=1, keepdims=True)  # keepdims for broadcasting [N,C]/[N,1]=[N,C]
