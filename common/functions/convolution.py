@@ -14,7 +14,7 @@ def img2col(x, kernel_size=(3, 3), stride=1, padding=0):
             axis 0: filter 적용 영역의 index
             axis 1: filter 적용 영역의 pixel값 -- i.e., filter와 내적할 벡터 --
             합성곱 연산은 x_flatten 행렬과 kernel 행렬:
-                shape: [C*filter_h*filter_w,output_channels]
+                shape: [C*filter_h*filter_w,out_channels]
                     out_channels개의 (열 벡터인) kernel을 열 방향으로 쌓은 행렬
             과의 행렬곱을 통해 효율적으로 수행할 수 있다.
     """
@@ -118,9 +118,9 @@ if __name__ == '__main__':
      [00, 00, 00, 00, 00, 00]]           [00, 00, 00, 00, 00, 00]]
     """
 
-    conv_args = (kernel_size, stride, padding) = (2, 2, 1)  # -> H=3, W=3
+    conv_params = (kernel_size, stride, padding) = (2, 2, 1)  # -> H=3, W=3
                                                             # -> filter_h=filter_w=2 -> h=0~1, w=0~1
-    x_flatten = img2col(x, *conv_args)
+    x_flatten = img2col(x, *conv_params)
 
     """for loop
     h=0, w=1이라면
@@ -160,14 +160,14 @@ if __name__ == '__main__':
      [48, 00, 00, 00,  64, 00, 00, 00]]     # N=2nd에 대해 (filter_h=4,filter_w=4) 시작점의 kernel이 커버하는 값
     """
 
-    x_origin_1 = col2img(x_flatten, x_shape, *conv_args)
+    x_origin_1 = col2img(x_flatten, x_shape, *conv_params)
     print(np.array_equal(x, x_origin_1))
 
     # breakpoint()
 
-    conv_args = ((3, 2), 2, 1)
-    x_flatten = img2col(x, *conv_args)
-    x_origin_2 = col2img(x_flatten, x_shape, *conv_args)
+    conv_params = ((3, 2), 2, 1)
+    x_flatten = img2col(x, *conv_params)
+    x_origin_2 = col2img(x_flatten, x_shape, *conv_params)
     print(np.array_equal(x, x_origin_2))
 
     # breakpoint()
