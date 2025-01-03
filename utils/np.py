@@ -1,4 +1,4 @@
-from infrastructure.gpu import GPU
+from config.gpu import GPU
 
 
 if GPU:

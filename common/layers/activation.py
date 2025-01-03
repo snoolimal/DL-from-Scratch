@@ -1,4 +1,4 @@
-from infrastructure.np import np
+from utils.np import np
 from common.functions import relu, sigmoid, softmax
 
 

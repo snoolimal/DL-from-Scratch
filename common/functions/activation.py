@@ -1,4 +1,4 @@
-from infrastructure.np import np
+from utils.np import np
 
 
 def tanh(x):
