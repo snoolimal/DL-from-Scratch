@@ -1,5 +1,5 @@
 from utils.np import np
-from common.functions.convolution import img2col, col2img
+from _common.functions.convolution import img2col, col2img
 
 
 class Convolution:

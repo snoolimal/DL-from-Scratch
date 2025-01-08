@@ -1,5 +1,5 @@
 from utils.np import np
-from common.functions import relu, sigmoid, softmax
+from _common.functions import relu, sigmoid, softmax
 
 
 class ReLU:
