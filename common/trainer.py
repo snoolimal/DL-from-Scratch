@@ -2,7 +2,7 @@ import time
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from common.base import Model, Optimizer
-from utils.train_util import DataLoader, GradCntrller
+from util.train_util import DataLoader, GradCntrller
 from config import np
 
 

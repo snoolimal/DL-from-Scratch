@@ -1,0 +1,1 @@
+My customization of 「Deep Learning from Scratch」 series.
