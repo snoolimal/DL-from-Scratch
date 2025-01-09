@@ -3,7 +3,7 @@ import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from common.base import Model, Optimizer
-from util.train_util import DataLoader, GradCntrller
+from util import DataLoader, adjust_grads
 
 
 class Trainer:
@@ -28,7 +28,6 @@ class Trainer:
         self.loss_list = []
 
         dataloader = DataLoader(x, batch_size, t)
-        gradctrller = GradCntrller()
 
         start_time = time.time()
         pbar = tqdm(range(1, max_epoch + 1))
@@ -36,9 +35,13 @@ class Trainer:
             total_loss = 0
             for batch_x, batch_t in dataloader:
                 # optimizer.zero_grad()
+                """
+                각 node에서 계산된 dw는 이전 batch에서 계산된 dw를
+                `self.grads[...] = dw`로 덮어 쓰므로 처음에 gradient 그릇을 비울 필요는 없다. 
+                """
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
-                params, grads = gradctrller(model.params, model.grads, max_grad)
+                params, grads = adjust_grads(model.params, model.grads, max_grad)
                 optimizer.step(params, grads)
 
                 total_loss += loss

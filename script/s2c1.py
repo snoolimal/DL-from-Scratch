@@ -1,7 +1,8 @@
 from config import np
 from data import spiral
 from model import TwoLayerNet
-from common import Trainer, SGD
+from common.trainer import Trainer
+from common.optimizer import SGD
 
 
 seed = 42
