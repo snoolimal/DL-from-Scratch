@@ -2,7 +2,7 @@ import time
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from common.base import Model, Optimizer
-from utils.train_util import DataLoader, GradController
+from utils.train_util import DataLoader, GradCntrller
 from config import np
 
 
@@ -28,7 +28,7 @@ class Trainer:
         self.loss_list = []
 
         dataloader = DataLoader(x, batch_size, t)
-        gradctrller = GradController()
+        gradctrller = GradCntrller()
 
         start_time = time.time()
         pbar = tqdm(range(1, max_epoch + 1))

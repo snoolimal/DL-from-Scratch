@@ -32,7 +32,7 @@ class DataLoader:
         return (len(self.x) + self.batch_size - 1) // self.batch_size
 
 
-class GradController:
+class GradCntrller:
     def __init__(self):
         pass
 
