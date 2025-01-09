@@ -1,9 +1,9 @@
+import numpy
 import time
-from tqdm import tqdm
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 from common.base import Model, Optimizer
 from util.train_util import DataLoader, GradCntrller
-from config import np
 
 
 class Trainer:
@@ -48,10 +48,11 @@ class Trainer:
             pbar.set_description(
                 f'Epoch {epoch} || Avg Train Loss: {avg_loss:.3f}  ({elapsed_time:.3f}s)'
             )
+            if hasattr(avg_loss, 'get'): avg_loss = avg_loss.get()  # cupy array라면 GPU에서 CPU로
             self.loss_list.append(float(avg_loss))
 
     def plot(self, ylim=None):
-        x = np.arange(len(self.loss_list))
+        x = numpy.arange(len(self.loss_list))
         if ylim is not None:
             plt.ylim(*ylim)
         plt.plot(x, self.loss_list, label='train')

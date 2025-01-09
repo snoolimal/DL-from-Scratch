@@ -44,6 +44,9 @@ class GradCntrller:
 
     @staticmethod
     def sum_duplicated_grads(params, grads):
+        """
+
+        """
         params, grads = params[:], grads[:]
 
         def check(params, i, j, transpose=False):
