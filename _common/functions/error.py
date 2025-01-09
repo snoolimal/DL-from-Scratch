@@ -1,4 +1,4 @@
-from utils.np import np
+from config.np import np
 
 
 def mean_squared_error(y, t):

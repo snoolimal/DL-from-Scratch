@@ -1,4 +1,4 @@
-from utils.np import np
+from config.np import np
 from _common.functions.convolution import img2col, col2img
 
 

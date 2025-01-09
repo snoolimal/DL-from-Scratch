@@ -1,4 +1,4 @@
-from utils.np import np
+from config.np import np
 
 
 def img2col(x, kernel_size=(3, 3), stride=1, padding=0):
