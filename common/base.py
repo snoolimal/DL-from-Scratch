@@ -1,7 +1,7 @@
 import os
 import pickle
 from config import *
-from util import cupy_util as cuu
+from utils import cupy_util as cuu
 
 
 class Model:

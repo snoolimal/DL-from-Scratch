@@ -3,7 +3,7 @@ import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from common.base import Model, Optimizer
-from util import DataLoader, adjust_grads
+from utils import DataLoader, adjust_grads
 
 
 class Trainer:
