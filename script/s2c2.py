@@ -40,6 +40,7 @@ def check_ptb():
     except ImportError:
         # 그냥 SVD (느리다)
         def randomized_svd(W, **kwargs):
+            _ = kwargs
             U, S, V = np.linalg.svd(W)
 
             return U, S, V

@@ -74,6 +74,7 @@ def ppmi(C, eps=1e-8):
         for j in range(C.shape[1]):
             pmi = np.log2(C[i, j] * N / (S[j] * S[i]) + eps)
             W[i, j] = max(0, pmi)
+    # 요 이중 for loop는 cupy로 작동시키면 numpy보다 훨씬 느리네. 왜지?
 
     return W
 
