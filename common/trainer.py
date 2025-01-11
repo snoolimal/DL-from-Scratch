@@ -37,7 +37,8 @@ class Trainer:
                 # optimizer.zero_grad()
                 """
                 각 node에서 계산된 dw는 이전 batch에서 계산된 dw를
-                `self.grads[...] = dw`로 덮어 쓰므로 처음에 gradient 그릇을 비울 필요는 없다. 
+                self.grads에서 곧바로 dw를 꺼내 수정하거나 dw를 계산한 후 `self.grads[...] = dw`로 덮어 쓰므로
+                처음에 gradient 그릇을 비울 필요는 없다. 
                 """
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
@@ -56,7 +57,10 @@ class Trainer:
                 e.g.
                 총 layer가 2개이고 layer 1의 params가 [...]_1, layer 2의 params가 [[...]_21, [...]_22]면
                 self.params는 list의 += 연산으로
-                [[...]_1, [...]_21, [...]_22]가 그대로 담긴다.   
+                [[...]_1, [...]_21, [...]_22]가 그대로 담긴다.
+                self.grads에도 같은 순서로 각 param의 gradient 그릇
+                [g[...]_1, g[...]_21, g[...]_22]로 그대로 만들어지고,
+                각 layer의 .backward()가 호출될 때마다 해당하는 grad가 덮어 씌워진다.    
                 """
 
                 total_loss += loss
