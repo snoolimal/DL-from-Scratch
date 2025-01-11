@@ -2,13 +2,14 @@
 Chapter 3. word2vec
 """
 
-from model import SimpleCBOW
+from model import SimpleCBOW, SimpleSkipGram
 from common.optimizer import Adam
 from common.trainer import Trainer
 from utils.nlp_util import create_one_hot_context_target, tokenize_corpus
 
 
-def main():
+def main(model_type=1):
+    assert model_type in [1, 2], "Select among 1 for SimpleCBOW or 2 for SimpleSkipGram as model_type."
     window_size = 1
     hidden_size = 5
     batch_size = 3
@@ -17,7 +18,13 @@ def main():
     corpus = 'You say goodbye and I say hello.'
     contexts, target, vocab_size = create_one_hot_context_target(corpus, window_size)
 
-    model = SimpleCBOW(vocab_size, hidden_size)
+    if model_type == 1:
+        print('Model: SimpleCBOW')
+        # model = SimpleCBOW(vocab_size, hidden_size)
+        model = SimpleCBOW(vocab_size, hidden_size, window_size)
+    elif model_type == 2:
+        print('Model: SimpleSkipGram')
+        model = SimpleSkipGram(vocab_size, hidden_size, window_size)
     optimizer = Adam()
     trainer = Trainer(model, optimizer)
     trainer.fit(
@@ -45,4 +52,5 @@ def preprocess():
 
 if __name__ == '__main__':
     # preprocess()
-    main()
+    main(1)
+    main(2)

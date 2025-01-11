@@ -56,9 +56,19 @@ class Trainer:
 
     def plot(self, ylim=None):
         x = numpy.arange(len(self.loss_list))
+        min_loss = min(self.loss_list)
+        min_epoch = int(numpy.argmin(self.loss_list))
+
+        plt.figure(figsize=(10, 6))
         if ylim is not None:
             plt.ylim(*ylim)
-        plt.plot(x, self.loss_list, label='train')
+        plt.plot(x, self.loss_list, label='train', color='#1f77b4')
+        plt.axhline(y=min_loss, color='r', linestyle='--', alpha=0.5, linewidth=0.5)
+        plt.axvline(x=min_epoch, color='r', linestyle='--', alpha=0.5, linewidth=0.5)
+        plt.plot(min_epoch, min_loss, 'ro', label=f'min: ({min_epoch + 1}, {min_loss:.4f})')
+        plt.annotate(f'({min_epoch + 1}, {min_loss:.2f})',
+                     xy=(min_epoch, min_loss), xytext=(-40, 20), textcoords='offset points', color='red')
         plt.xlabel('Epoch')
         plt.ylabel('Avg Train Loss')
+
         plt.show()
