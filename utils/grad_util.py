@@ -13,16 +13,28 @@ def adjust_grads(params, grads, max_norm):
 
 
 def sum_duplicated_grads(params, grads):
+    #TODO: RNN까지 보고 SimpleCBOW, Skipgram 고려해 이 부분 설명 수정 (각각의 loss를 딱히 뱉는 것 같진 않은디? 각각의 loss는 batch의 data들 각각에 대한 loss면 맞지만)
     """
     여러 nodes에서 gradient가 계산되는 공유된 weight가 있다면 그들을 모아 준다.
     Optimizer의 step()의 params argument에 중복된 weight가 존재한다면 그들의 gradient를 더해 하나로:
-        RNN의 weight 공유(재사용)은 copy gate와 엄밀히는 다르다.
+        RNN의 weight 공유(재사용)는 copy gate와 엄밀히는 다르다.
         Copy gate는 동일한 시점에 입력을 여러 경로로 복사하는 병렬적 복사인 반면
         RNN은 시간축을 따라 순차적으로 weight를 재사용하는 순차적 재사용이기 때문이다.
         하지만 RNN에서든 copy gate에서든 동일한 입력(weight)가 여러 함수에 독립적으로 사용되고,
         loss에 대한 최종 gradient는 미분의 선형성과 chain rule에 의해 각 경로의 gradient 합으로 계산된다는 원리는 동일하다.
+        RNN뿐 아니라 CBOW나 Skipgram 등 encoding을 수행하는 weight를 공유하는 구조를 가져
+            cf. 요놈들은 시간축을 따라 weight를 공유하진 않는다.
+        하나의 weight에 대해 여러 경로에서 gradient가 계산되는 모델이라면, 이러한 원리:
+            1. 동일한 입력(weight)이 각각의 loss를 뱉는 여러 함수(node)들에 독립적으로 사용되고
+            2. final scalar loss는 이러한 loss들을 합산(평균) 만들어지므로
+            3. 미분의 선형성과 chain rule에 따라 각 경로의 gradient가 더해져 loss의 weight에 대한 최종 gradient가 결정된다
+        는 모두 동일하다.
+        PyTorch나 TensorFlow 등 autodiff를 수행하는 DL framework에서는 자동으로 gradient를 합산해 준다.
+        지금과 같이 weight 공유 구조를 명시적으로 구현 -- e.g., 특정 layer를 여러 번 호출 -- 한다면
+        gradient 합산을 명시적으로 올바르게 처리해야 한다.
     만든다.
-    그래야 optimizer가 의도대로 동작한다.
+    요렇게 gradient step을 밟을 때 -- i.e., weight update를 수행할 때 -- 전달된 grad의 param의 중복얼 없애야
+    구현해 둔 optimizer가 의도대로 동작한다.
     ---
     Model class의 computation graph
     ```

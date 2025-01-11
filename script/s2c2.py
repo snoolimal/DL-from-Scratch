@@ -1,3 +1,7 @@
+"""
+Chapter 2. 자연어와 단어의 분산 표현
+"""
+
 from data import ptb
 from utils.nlp_util import *
 
@@ -25,7 +29,7 @@ def check_utils():
     # breakpoint()
 
 
-def check_ptb():
+def main():
     window_size = 2
     wordvec_size = 100
 
@@ -58,4 +62,4 @@ def check_ptb():
 
 if __name__ == "__main__":
     # check_utils()
-    check_ptb()
+    main()

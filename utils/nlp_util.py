@@ -31,6 +31,73 @@ def tokenize_corpus(corpus):
     return tokenized_corpus, word_to_id, id_to_word
 
 
+def create_one_hot_context_target(corpus, window_size=1):
+    """
+    Fig 3-18 (p.134(135))
+    """
+    tokenized_corpus, _, _ = tokenize_corpus(corpus)
+    contexts, target = create_context_target(tokenized_corpus, window_size)
+    vocab_size = len(np.unique(tokenized_corpus))
+
+    contexts = convert_one_hot(tokenized=contexts, vocab_size=vocab_size)
+    target = convert_one_hot(tokenized=target, vocab_size=vocab_size)
+
+    return contexts, target, vocab_size
+
+
+def create_context_target(tokenized_corpus, window_size=1):
+    """
+    e.g. 'You say goodbye and I say hello.'
+    ---
+    Args:
+        tokenized_corpus: [0, 1, 2, 3, 4, 1, 5, 6] | [N,]
+    ---
+    Returns:
+        contexts: [[0, 2], [1, 3, ..., [1, 6]] | [N-context_window_size,context_window_size]
+            cf. context_window_size = 2 * window_size
+        target: [1, 2, 3, 4, 1, 5] | [N-context_window_size,]
+    """
+    target = tokenized_corpus[window_size:-window_size]
+    contexts = []
+
+    for idx in range(window_size, len(tokenized_corpus) - window_size):
+        cs = []
+        for t in range(-window_size, window_size + 1):
+            if t == 0:
+                continue
+            cs.append(tokenized_corpus[idx + t])
+        contexts.append(cs)
+
+    return np.array(contexts), np.array(target)
+
+
+def convert_one_hot(tokenized, vocab_size):
+    """
+    Args:
+        tokenized: tokenized corpus or tokenized target
+        vocab_size: tokenized의 corpus의 단어 개수
+    ---
+    Returns:
+        one_hot: [tokenized.shape,vocab_size]
+    """
+    N = tokenized.shape[0]
+
+    # target
+    if tokenized.ndim == 1:
+        one_hot = np.zeros((N, vocab_size), dtype=np.int32)
+        for idx, word_id in enumerate(tokenized):
+            one_hot[idx, word_id] = 1
+    # contexts
+    elif tokenized.ndim == 2:
+        C = tokenized.shape[1]
+        one_hot = np.zeros((N, C, vocab_size), dtype=np.int32)
+        for idx_0, word_ids in enumerate(tokenized):
+            for idx_1, word_id in enumerate(word_ids):
+                one_hot[idx_0, idx_1, word_id] = 1
+
+    return one_hot
+
+
 def create_co_matrix(tokenized_corpus, window_size=1):
     """
     Tokenized 말뭉치의 동시발생행렬:

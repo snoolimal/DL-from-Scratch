@@ -5,20 +5,25 @@ from common.trainer import Trainer
 from common.optimizer import SGD
 
 
-seed = 42
+def main():
+    seed = 42
 
-x, t = spiral.load_data(seed)
-input_size = int(np.prod(np.array(x.shape[1:])))
-num_classes = t.shape[-1]
+    x, t = spiral.load_data(seed)
+    input_size = int(np.prod(np.array(x.shape[1:])))
+    num_classes = t.shape[-1]
 
-hidden_size = 10
-max_epoch = 300
-batch_size = 32
-lr = 1.0
+    hidden_size = 10
+    max_epoch = 300
+    batch_size = 32
+    lr = 1.0
 
-model = TwoLayerNet(input_size, hidden_size, num_classes)
-optimizer = SGD(lr)
+    model = TwoLayerNet(input_size, hidden_size, num_classes)
+    optimizer = SGD(lr)
 
-trainer = Trainer(model, optimizer)
-trainer.fit(x, t, max_epoch, batch_size)
-trainer.plot()
+    trainer = Trainer(model, optimizer)
+    trainer.fit(x, t, max_epoch, batch_size)
+    trainer.plot()
+
+
+if __name__ == '__main__':
+    main()

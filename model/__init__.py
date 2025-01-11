@@ -1,1 +1,2 @@
-from .two_layer_net import *
+from .TwoLayerNet import *
+from .SimpleCBOW import *
