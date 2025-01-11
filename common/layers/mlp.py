@@ -37,9 +37,10 @@ class Affine:
 
     def backward(self, dy):
         w, b = self.params
+        x = self.x
 
         dx = np.dot(dy, w.T)
-        dw = np.dot(self.x.T, dy)
+        dw = np.dot(x.T, dy)
         db = np.sum(dy, axis=0)
 
         self.grads[0][...] = dw

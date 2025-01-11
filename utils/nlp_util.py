@@ -33,7 +33,7 @@ def tokenize_corpus(corpus):
 
 def create_one_hot_context_target(corpus, window_size=1):
     """
-    Fig 3-18 (p.134(135))
+    cf. fig 3-18 (p.134(135))
     """
     tokenized_corpus, _, _ = tokenize_corpus(corpus)
     contexts, target = create_context_target(tokenized_corpus, window_size)
@@ -75,7 +75,7 @@ def convert_one_hot(tokenized, vocab_size):
     """
     Args:
         tokenized: tokenized corpus or tokenized target
-        vocab_size: tokenized의 corpus의 단어 개수
+        vocab_size V: tokenized의 corpus의 단어 개수
     ---
     Returns:
         one_hot: [tokenized.shape,vocab_size]

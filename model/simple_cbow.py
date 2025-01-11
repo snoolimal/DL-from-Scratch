@@ -1,14 +1,14 @@
 from config import np
 from common.base import Model
-from common.layers import MatMul, SoftmaxWithLoss
+from common.layers.mlp import MatMul, SoftmaxWithLoss
 
 
 class SimpleCBOW(Model):
-    def __init__(self, window_size, vocab_size, hidden_size):
+    def __init__(self, vocab_size, hidden_size, window_size=1):
         """
         Args:
-            vocab_size: input_size
-            hidden_size: 단어 예측에 필요한 정보를 간결하게 담는 밀집 벡터 표현을 얻는 것이 핵심이므로 input_size보다 작게
+            vocab_size V: input_size
+            hidden_size H: 단어 예측에 필요한 정보를 간결하게 담는 밀집 벡터 표현을 얻는 것이 핵심이므로 input_size보다 작게
         """
         super().__init__()
         self.context_window_size = 2 * window_size
@@ -47,7 +47,7 @@ class SimpleCBOW(Model):
                     한 번에 처리하는 context의 개수
                 C: context window size (2*window size)
                 V: vocab size (one-hot dim)
-                cf. contexts[:, i, :]: [N, V]
+                cf. contexts[:, i, :]: [N,V]
             target: [N,V]
         """
         # h0 = self.in_layer0.forward(contexts[:, 0, :])
