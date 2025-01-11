@@ -43,6 +43,21 @@ class Trainer:
                 model.backward()
                 params, grads = adjust_grads(model.params, model.grads, max_grad)
                 optimizer.step(params, grads)
+                """
+                model instance는
+                ```
+                # Computation Graph
+                self.params, self.grads = [], []
+                for layer in self.layers:
+                    self.params += layer.params
+                    self.grads += layer.grads
+                ```
+                로 params, grads instance var로 가진다.
+                e.g.
+                총 layer가 2개이고 layer 1의 params가 [...]_1, layer 2의 params가 [[...]_21, [...]_22]면
+                self.params는 list의 += 연산으로
+                [[...]_1, [...]_21, [...]_22]가 그대로 담긴다.   
+                """
 
                 total_loss += loss
 
