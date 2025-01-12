@@ -267,7 +267,7 @@ class UnigramSampler:
             target: target의 단어 IDs (indices) | [N,]
         ---
         Returns:
-            neg_sam: 각 target에 대한 negative 단어 IDs (indices) | [N,sample_size]
+            negative_sample: 각 target에 대한 negative 단어 IDs (indices) | [N,sample_size]
         """
         batch_size = target.shape[0]
 
