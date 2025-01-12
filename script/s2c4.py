@@ -7,7 +7,7 @@ from config import np, GPU
 from data import ptb
 from utils import cupy_util as cuu
 from utils.nlp_util import create_context_target, most_similar, analogy
-from model import CBOW
+from model import CBOW, SkipGram
 from common.trainer import Trainer
 from common.optimizer import Adam
 
@@ -19,7 +19,7 @@ def main(phase='eval'):
         window_size = 5
         hidden_size = 100
         batch_size = 128
-        max_epoch = 50
+        max_epoch = 20
 
         tokenized_corpus, word_to_id, id_to_word = ptb.load_data('train')
         vocab_size = len(word_to_id)
@@ -29,6 +29,7 @@ def main(phase='eval'):
             contexts, target = cuu.to_gpu(contexts), cuu.to_gpu(target)
 
         model = CBOW(tokenized_corpus, vocab_size, hidden_size, window_size)
+        # model = SkipGram(tokenized_corpus, vocab_size, hidden_size, window_size)
         optimizer = Adam()
         trainer = Trainer(model, optimizer)
 

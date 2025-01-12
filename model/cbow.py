@@ -57,14 +57,14 @@ class CBOW(Model):
         # batch의 data 각각에 대해 ith context 처리
         for i, layer in enumerate(self.in_layers):
             h += layer.forward(indices=contexts[:, i])
-        h *= 1.0 / len(self.in_layers)  # avg layer
+        h *= 1.0 / len(self.in_layers)          # avg layer
         loss = self.ns_loss.forward(h, target)
 
         return loss
 
     def backward(self, dy=1):
         dy = self.ns_loss.backward(dy)
-        dy *= 1.0 / len(self.in_layers)     # avg layer
+        dy *= 1.0 / len(self.in_layers)         # avg layer
         for layer in self.in_layers:
             layer.backward(dy)
 
