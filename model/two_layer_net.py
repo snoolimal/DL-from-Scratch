@@ -1,5 +1,5 @@
 from common.base import Model
-from common.layers.mlp import Affine, Sigmoid, SoftmaxWithLoss
+from common.layers import Affine, Sigmoid, SoftmaxWithLoss
 from config import np
 
 

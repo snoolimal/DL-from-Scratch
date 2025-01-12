@@ -1,6 +1,6 @@
 from config import np
 from common.base import Model
-from common.layers.mlp import MatMul, SoftmaxWithLoss
+from common.layers import MatMul, SoftmaxWithLoss
 
 
 class SimpleSkipGram(Model):

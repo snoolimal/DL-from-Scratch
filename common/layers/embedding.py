@@ -135,8 +135,11 @@ class EmbeddingDot:
         h, target_w = self.cache
         dy = dy.reshape(dy.shape[0], 1)     # single data라도 batch form으로 일반화
 
+        # dns grad towards optimizer
         dtarget_w = h * dy
         self.embed.backward(dtarget_w)      # dw_out 처리
+        
+        # dns grad to stream
         dh = dy * target_w
 
         return dh

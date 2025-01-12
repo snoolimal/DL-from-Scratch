@@ -1,5 +1,7 @@
-from tqdm import tqdm
 import numpy as np
+import collections
+from tqdm import tqdm
+from config import GPU
 # from config import np
 
 
@@ -179,3 +181,70 @@ def most_similar(query, word_to_id, id_to_word, word_matrix, top=5):
         count += 1
         if count >= top:
             return
+
+
+class UnigramSampler:
+    """
+    다중 분류를 이진 분류로 전환하려면 정답을 정답으로 분류할 뿐 아니라 오답을 오답으로 분류하도록 param을 학습시켜야 한다.
+    따라서 말뭉치의 개별(uni) 단어의 확률 분포에 따라 오답을 sampling하는 negative sampling이 필요하다.
+    여기에는 희소한 단어보다 흔하게 등장하는 단어를 잘 처리하는 방향으로 model을 학습시키겠다는 의도가 전제된다.
+    이때 희소한 단어의 출현 확률을 조금이나마 높여주기 위해 특정한 값을 제곱해 확률 분포를 약간 수정한다.
+    """
+    def __init__(self, tokenized_corpus, sample_size, power=0.75):
+        self.sample_size = sample_size  # negative sampling size
+        self.vocab_size = None
+        self.word_dist = None              # 단어 확률 분포
+
+        counts = collections.Counter()
+        for word_id in tokenized_corpus:
+            counts[word_id] += 1
+        # alternative 1.
+        # counts = collections.Counter(tokenized_corpus)
+        # alternative 2. without Counter class
+        # counts = {}
+        # for word_id in corpus:
+        #     if word_id not in counts:
+        #         counts[word_id] = 0
+        #     counts[word_id] += 1
+
+        vocab_size = len(counts)
+        self.vocab_size = vocab_size
+
+        self.word_dist = np.zeros(vocab_size)
+        for i in range(vocab_size):
+            self.word_dist[i] = counts[i]
+
+        self.word_dist = np.power(self.word_dist, power)
+        self.word_dist /= np.sum(self.word_dist)
+
+    def negative_sample(self, target):
+        """
+        Args:
+            target: target의 단어 IDs (indices) | [N,]
+        ---
+        Returns:
+            neg_sam: 각 target에 대한 negative 단어 IDs (indices) | [N,sample_size]
+        """
+        batch_size = target.shape[0]
+
+        if not GPU:
+            negative_sample = np.zeros((batch_size, self.sample_size), dtype=np.int32)
+            for i in range(batch_size):
+                word_dist = self.word_dist.copy()
+                target_idx = target[i]
+                word_dist[target_idx] = 0           # 정답은 빼고
+                word_dist /= word_dist.sum()        # 다시 합이 1이 되도록 dist 조정
+                negative_sample[i, :] = np.random.choice(self.vocab_size, size=self.sample_size,
+                                                         replace=False, p=word_dist)
+                """cf. ndarray의 copy method
+                ndarray의 copy()는 shallow copy지만 데이터 자체를 새로운 메모리 공간에 복사한다.
+                ndarray가 연속된 메모리 블록에 데이터를 저장하는 (특별한) 구조이기 때문이다.
+                따라서 word_dist를 변경해도 self.word_dist는 바뀌지 않는다.
+                """
+        else:
+            # cupy를 사용한다면 속도를 우선한다.
+            # negative sample에 true target이 포함될 수 있다.
+            negative_sample = np.random.choice(self.vocab_size, size=(batch_size, self.sample_size),
+                                               replace=True, p=self.word_dist)
+
+        return negative_sample

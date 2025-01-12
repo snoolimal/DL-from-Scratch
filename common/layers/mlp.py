@@ -1,4 +1,4 @@
-from common.functions import sigmoid, softmax, cross_entropy_error
+from common.functions import sigmoid, softmax
 from config import np
 
 
@@ -65,36 +65,6 @@ class Softmax:
         return dx
 
 
-class SoftmaxWithLoss:
-    def __init__(self):
-        self.params, self.grads = [], []
-        self.y = None
-        self.t = None
-
-    def forward(self, x, t):
-        self.t = t
-
-        self.y = softmax(x)  # [N,C]
-        loss = cross_entropy_error(self.y, self.t)
-
-        return loss
-
-    def backward(self, dy=1):
-        # one-hot target vector라면 class idx vector로 변환
-        if self.t.size == self.y.size:
-            self.t = self.t.argmax(axis=1)
-
-        batch_size = self.t.shape[0]
-
-        _y = self.y.copy()
-        _y[np.arange(batch_size), self.t] -= 1
-        dloc = _y / batch_size
-
-        dx = dloc * dy
-
-        return dx
-
-
 class Sigmoid:
     def __init__(self):
         self.params, self.grads = [], []
@@ -107,29 +77,5 @@ class Sigmoid:
     def backward(self, dy):
         dloc = (1.0 - self.y) * self.y
         dx = dloc * dy  # hadmard product
-
-        return dx
-
-
-class SigmoidWithLoss:
-    def __init__(self):
-        self.params, self.grads = [], []
-        self.y = None
-        self.t = None
-
-    def forward(self, x, t):
-        self.t = t                      # [N,]
-        self.y = sigmoid(x)             # [N,]
-
-        _y = np.c_[1 - self.y, self.y]  # binary의 sigmoid 출력은 1(정답)일 확률 (concat arrays along col) | [N,2]
-        loss = cross_entropy_error(_y, self.t)
-
-        return loss
-
-    def backward(self, dy=1):
-        batch_size = self.t.shape[0]
-
-        dloc = (self.y - self.t) / batch_size
-        dx = dloc * dy
 
         return dx
