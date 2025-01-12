@@ -19,15 +19,15 @@ def main(phase='eval', model_type=1):
 
     root_dir = Path(__file__).resolve().parents[1]
     model_name = 'cbow' if model_type == 1 else 'skipgram'
-    # file_name = str(root_dir / 'model' / f'_{model_name}_params.pkl')
-    file_name = str(root_dir / 'model' / f'_{model_name}_params_repo.pkl')
+    file_name = str(root_dir / 'model' / f'_{model_name}_params.pkl')
+    # file_name = str(root_dir / 'model' / f'_{model_name}_params_repo.pkl')
 
     if phase == 'train':
         # hyperparameters
         window_size = 5
         hidden_size = 100   # embedding dimension (단어의 분산 표현 밀집 벡터의 차원)
         batch_size = 128
-        max_epoch = 15
+        max_epoch = 10
 
         tokenized_corpus, word_to_id, id_to_word = ptb.load_data('train')
         vocab_size = len(word_to_id)
