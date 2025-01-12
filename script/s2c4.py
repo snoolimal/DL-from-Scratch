@@ -81,5 +81,5 @@ def main(phase='eval', model_type=1):
 
 
 if __name__ == '__main__':
-    main('train')
-    # main('eval')
+    # main('train')
+    main('eval')
