@@ -1,8 +1,14 @@
 import numpy as np
 import collections
 from tqdm import tqdm
-from config import GPU
 # from config import np
+from config import GPU
+from utils import normalize
+"""
+cupy를 쓰면
+    ppmi()의 이중 for loop가 ptb dataset처럼 큰 말뭉치에 대해서 매우 느려진다.
+    analogy()의 np.dot() 연산에서 .get()으로 값을 꺼내오라며 에러가 발생한다.
+"""
 
 
 def tokenize_corpus(corpus):
@@ -183,6 +189,40 @@ def most_similar(query, word_to_id, id_to_word, word_matrix, top=5):
             return
 
 
+def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
+    """
+    king - man + woman = queen
+    """
+    for word in (a, b, c):
+        if word not in word_to_id:
+            print('Cannot find %s in corpus.' % word)
+            return
+
+    print('\n[analogy] ' + a + ':' + b + ' = ' + c + ':?')
+    a_vec, b_vec, c_vec = word_matrix[word_to_id[a]], word_matrix[word_to_id[b]], word_matrix[word_to_id[c]]
+    query_vec = b_vec - a_vec + c_vec
+    query_vec = normalize(query_vec)
+
+    similarity = np.dot(word_matrix, query_vec)     # query 벡터와 word matrix의 각 행(단어 벡터)들과의 유사도를 내적으로 get
+
+    # 정답도 제공했다면 정답과의 유사도 get
+    if answer is not None:
+        print("==>" + answer + ":" + str(np.dot(word_matrix[word_to_id[answer]], query_vec)))
+
+    # 유사도를 기준으로 정렬
+    count = 0
+    for i in (-1 * similarity).argsort():
+        if np.isnan(similarity[i]):
+            continue
+        if id_to_word[i] in (a, b, c):
+            continue
+        print(' {0}: {1}'.format(id_to_word[i], similarity[i]))
+
+        count += 1
+        if count >= top:
+            return
+
+
 class UnigramSampler:
     """
     다중 분류를 이진 분류로 전환하려면 정답을 정답으로 분류할 뿐 아니라 오답을 오답으로 분류하도록 param을 학습시켜야 한다.
@@ -191,6 +231,10 @@ class UnigramSampler:
     이때 희소한 단어의 출현 확률을 조금이나마 높여주기 위해 특정한 값을 제곱해 확률 분포를 약간 수정한다.
     """
     def __init__(self, tokenized_corpus, sample_size, power=0.75):
+        """
+        Args:
+            tokenized_corpus: [NN,]
+        """
         self.sample_size = sample_size  # negative sampling size
         self.vocab_size = None
         self.word_dist = None              # 단어 확률 분포

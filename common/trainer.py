@@ -29,11 +29,12 @@ class Trainer:
 
         dataloader = DataLoader(x, batch_size, t)
 
-        start_time = time.time()
-        pbar = tqdm(range(1, max_epoch + 1))
+        # start_time = time.time()
+        pbar = tqdm(range(1, max_epoch + 1), position=0, leave=True)
         for epoch in pbar:
             total_loss = 0
-            for batch_x, batch_t in dataloader:
+            for batch_idx, (batch_x, batch_t) in enumerate(dataloader):
+                pbar.set_description(desc=f'Epoch: {epoch}')
                 # optimizer.zero_grad()
                 """
                 각 node에서 계산된 dw는 이전 batch에서 계산된 dw를
@@ -62,14 +63,13 @@ class Trainer:
                 [g[...]_1, g[...]_21, g[...]_22]로 그대로 만들어지고,
                 각 layer의 .backward()가 호출될 때마다 해당하는 grad가 덮어 씌워진다.    
                 """
-
                 total_loss += loss
+                pbar.set_postfix_str(
+                    f'Avg Loss: {round(self.loss_list[-1], 3) if self.loss_list else "N/A"}, '
+                    f'batch {batch_idx + 1}/{len(dataloader)} loss: {loss:.3f}'
+                )
 
             avg_loss = total_loss / len(dataloader)
-            elapsed_time = time.time() - start_time
-            pbar.set_description(
-                f'Epoch {epoch} || Avg Train Loss: {avg_loss:.3f}  ({elapsed_time:.3f}s)'
-            )
             if hasattr(avg_loss, 'get'): avg_loss = avg_loss.get()  # cupy array라면 GPU에서 CPU로
             self.loss_list.append(float(avg_loss))
 

@@ -11,9 +11,10 @@ class SimpleCBOW(Model):
             hidden_size H: 단어 예측에 필요한 정보를 간결하게 담는 밀집 벡터 표현을 얻는 것이 핵심이므로 input_size보다 작게
         """
         super().__init__()
-        self.context_window_size = 2 * window_size
 
+        self.context_window_size = 2 * window_size
         input_size = vocab_size
+
         w_in = 0.01 * np.random.randn(input_size, hidden_size)      # encoding, 단어의 분산 표현 밀집 벡터 (행이 단어 ID에 대응)
         w_out = 0.01 * np.random.randn(hidden_size, input_size)     # encoding, 단어의 분산 표현 밀집 벡터 (열이 단어 ID에 대응)
 
@@ -68,7 +69,7 @@ class SimpleCBOW(Model):
         dy *= 1.0 / self.context_window_size
         # _ = self.in_layer1.backward(dy)
         # _ = self.in_layer0.backward(dy)
-        for layer in reversed(self.in_layers):
+        for layer in reversed(self.in_layers):  # 사실 요기서 in_layers는 동시에 처리되므로 (병렬적 배치) reversed를 먹이나 아니나 동일
             _ = layer.backward(dy)
 
         return None

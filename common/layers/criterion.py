@@ -66,6 +66,12 @@ class NegativeSamplingLoss:
     def __init__(self, w, tokenized_corpus, power=0.75, sample_size=5):
         """
         cf. fig 4-17 (p.170(171))
+        ---
+        Args:
+            w: w_out | [V,H]
+                V: vocab size (=input size)
+                H: hidden size
+            tokenized_corpus: [NN,]
         """
         self.sample_size = sample_size
         self.sampler = UnigramSampler(tokenized_corpus, sample_size, power)

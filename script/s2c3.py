@@ -2,10 +2,10 @@
 Chapter 3. word2vec
 """
 
-from model import SimpleCBOW, SimpleSkipGram
-from common.optimizer import Adam
-from common.trainer import Trainer
 from utils.nlp_util import create_one_hot_context_target, tokenize_corpus
+from model import SimpleCBOW, SimpleSkipGram
+from common.trainer import Trainer
+from common.optimizer import Adam
 
 
 def main(model_type=1):

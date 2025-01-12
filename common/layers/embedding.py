@@ -17,6 +17,10 @@ class Embedding:
         self.indices = None                 # batch의 context indices
 
     def forward(self, indices):
+        """
+        Args:
+            indices: batch의 단어 IDs | [N,]
+        """
         w, = self.params
         self.indices = indices              # 요놈의 dns grad는 dump, self.grads와 self.params에 미포함
         y = w[indices]
@@ -138,7 +142,7 @@ class EmbeddingDot:
         # dns grad towards optimizer
         dtarget_w = h * dy
         self.embed.backward(dtarget_w)      # dw_out 처리
-        
+
         # dns grad to stream
         dh = dy * target_w
 
