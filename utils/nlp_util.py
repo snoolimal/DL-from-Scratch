@@ -263,9 +263,6 @@ class UnigramSampler:
 
     def negative_sample(self, target):
         """
-        Args:
-            target: target의 단어 IDs (indices) | [N,]
-        ---
         Returns:
             negative_sample: 각 target에 대한 negative 단어 IDs (indices) | [N,sample_size]
         """

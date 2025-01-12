@@ -121,7 +121,7 @@ class NegativeSamplingLoss:
             해야 한다.
         """
         dh = 0
-        for loss_layer, embed_dot_layer in zip(self.loss_layers, self.embed_dot_layers):
+        for loss_layer, embed_dot_layer in zip(self.loss_layers, self.embed_dot_layers):    # reversed() 먹일 필요 X
             dscore = loss_layer.backward(dy)
             dh += embed_dot_layer.backward(dscore)
 

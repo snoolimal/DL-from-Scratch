@@ -65,7 +65,7 @@ class CBOW(Model):
     def backward(self, dy=1):
         dy = self.ns_loss.backward(dy)
         dy *= 1.0 / len(self.in_layers)         # avg layer
-        for layer in self.in_layers:
+        for layer in self.in_layers:            # reversed() 먹일 필요 X
             layer.backward(dy)
 
         return None
