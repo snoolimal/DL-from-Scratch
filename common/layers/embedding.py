@@ -48,23 +48,47 @@ class Embedding:
         w의 특정 row만 갱신하는 작업을 보다 효율적으로 구현할 수 있다.
         더불어 고른 indices 중 batch 내에서 여러 번 등장하는 index가 존재할 수 있겠지. 가중치의 공유가 일어나면 gradient는 합산되어야 한다.
         (해당하는 ups grad를 할당이 아니라) dw를 0으로 초기화한 후 누적합하면 겹치는 경우까지 커버할 수 있다.
-        이미 누적합을 구현했으므로 학습 시 요 w param은 Trainer class의 adjust_grad에 걸리지 않을 것이다.
+        여기서 구현한 건 batch 내에서의 누적합. Embedding layer는 context에 대해 공통적으로 사용:
+            e.g.
+            ```
+            self.in_layers = []
+            for i in range(context_window_size):
+                layer = Embedding(w_in)     # 공유하는 가중치
+                self.in_layers.append(layer)
+            ```
+        하므로 embedding layer의 param, 위 예시의 w_in은 adjust_grad에 걸려 각 context_window_size번 누적될 것이다.
         ---
         Args:
             dy: 전체 ups grad가 아닌 dy에서 self.indices에 해당하는 골라둔 행(들, batch)
         """
-        dw, = self.grads    # self.params에서 w를 꺼내 dns grad를 계산한 것이 아니라
-                            # self.grads에서 dw를 꺼내 직접 다루었으므로 self.grads[...] = dw가 불필요
-        # dw[...] = 0         # dw 자체를 0으로 설정하는 것이 아닌 dw의 shape을 유지한 체 그 원소들을 0으로 (이미 zeros_like가...)
+        dw, = self.grads    # dns grad를 별도로 계산하고 self.grads[...] = dw로 self.grads에 준 것이 아니라
+                            # self.grads를 dw로 꺼내 직접 다루었으므로 self.grads[...] = dw가 불필요
+        dw[...] = 0         # dw 자체를 0으로 설정하는 것이 아닌 dw의 shape을 유지한 체 그 원소들을 0으로 (이미 zeros_like가...?)
         if GPU:
             import cupyx
             cupyx.scatter_add(dw, self.indices, dy)     # dw의 axis=0의 self.indices에 dy를 더함
         else:
             import numpy
             numpy.add.at(dw, self.indices, dy)
+        """dw[...] = 0
+        dw = np.zeros_like(w)라 해도 이 라인은 반드시 필요하다.
+        self.grads에서 dw를 꺼내 직접 다루되 scatter_add()와 add.at()으로 dw는 새로운 dw가 누적합된 결과이다.  
+        이때 dw는 model architecture를 생성할 때 __init__()에서 한 번만 zeros_like(w)로 초기화:
+            e.g.
+            self.in_layers = []
+            for i in range(context_window_size):
+                layer = Embedding(w_in)     # 공유하는 가중치
+                self.in_layers.append(layer)
+        되고 이후의 bpass에서는 계속 같은 dw object가 재사용된다.
+        그러므로 매 batch 처리로 밟는 gradient step마다 이전까지의 gradient값들이 누적된 dw를 비우고 새롭게 값을 누적시켜야 한다.  
+        고로, 매 bpass마다 명시적으로 dw를 0으로 초기화해 optimizer.zero_grad()를 구현해야 한다.
+        dw를 별도로 계산하고 self.grads[...] = dw로 self.grads에 값을 주었다면 자연스럽게 매번 backward가 호출될 때마다
+        dw가 새롭게 계산되므로 자연스럽게 문제가 발생하지 않고 optimizer.zero_grad()가 실현되지만,
+        이 경우 self.grads를 직접 다루어 gradient를 계산하므로 backward()에서 dw[...] = 0로 optimizer.zero_grad()를
+        명시적으로 구현해야 한다.
+        """
 
         return None     # optimizer로 보낼 dns grad뿐
-        #TODO: Trainer class에서 학습 시 adjust_grad에 걸리지 않는 것 확인해 보자.
 
 
 class EmbeddingDot:
@@ -140,10 +164,10 @@ class EmbeddingDot:
         dy = dy.reshape(dy.shape[0], 1)     # single data라도 batch form으로 일반화
 
         # dns grad towards optimizer
-        dtarget_w = h * dy
+        dtarget_w = h * dy                  # hadmard product (따라서 교환법칙 성립, =dy*h)
         self.embed.backward(dtarget_w)      # dw_out 처리
 
         # dns grad to stream
-        dh = dy * target_w
+        dh = dy * target_w                  # hadmard product
 
         return dh
