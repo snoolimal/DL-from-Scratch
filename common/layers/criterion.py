@@ -97,8 +97,6 @@ class NegativeSamplingLoss:
 
     def backward(self, dy=1):
         """
-
-        ---
         single data(target)에 대해 h와 각 target(pos or neg)의 fpass는
                              label (0 or 1) ->
                  h -> EmbeddingDot -> score -> SigmoidWithLoss -> loss
