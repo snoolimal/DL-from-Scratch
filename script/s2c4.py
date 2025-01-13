@@ -19,8 +19,8 @@ def main(phase='eval', model_type=1):
 
     root_dir = Path(__file__).resolve().parents[1]
     model_name = 'cbow' if model_type == 1 else 'skipgram'
-    file_name = str(root_dir / 'model' / 'param' / f'_{model_name}_params.pkl')
-    # file_name = str(root_dir / 'model' / f'_{model_name}_params_repo.pkl')
+    file_name = str(root_dir / 'model' / 'storage' / f'_{model_name}_params.pkl')
+    # file_name = str(root_dir / 'model' / 'storage' / f'_{model_name}_params_repo.pkl')
 
     if phase == 'train':
         # hyperparameters
