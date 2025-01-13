@@ -1,1 +1,0 @@
-#TODO: Motivation of RNN
