@@ -12,6 +12,10 @@ class Embedding:
         학습 결과로 (model에 대응하는) 제대로 된 단어의 분산 표현을 얻는 것이 목표니 이 벡터들은 학습 과정에서 계속 갱신되지.
     """
     def __init__(self, w):
+        """
+        Args:
+            w: [V,H]
+        """
         self.params = [w]                   # 단어의 밀집 벡터 표현
         self.grads = [np.zeros_like(w)]
         self.indices = None                 # batch의 context indices
@@ -103,7 +107,7 @@ class EmbeddingDot:
     say, you, goodbye의 밀집 벡터 표현을 얻는다.
     ---
     Args:
-        w: w_out | [H,V]
+        w: w_out | [V,H]
             cf. H: hidden_size
                 V: vocab_size
     """

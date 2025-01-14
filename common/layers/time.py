@@ -1,6 +1,7 @@
 from typing import Optional, List
 from config import np
 from common.layers import Affine
+from common.layers.embedding import Embedding
 
 
 class RNN:
@@ -207,7 +208,7 @@ class TimeRNN:
             dhs: [N,T,H]
         ---
         Returns:
-
+            dxs: [N,T,D]
         """
         wx, wh, b = self.params
         N, T, H = dhs.shape
@@ -405,3 +406,61 @@ class SmartTimeAffine:
         self.grads[1][...] = db
 
         return dhs
+
+
+class TimeEmbedding:
+    def __init__(self, w):
+        """
+        Args:
+            w: [V,D]
+        """
+        self.params = [w]
+        self.grads = [np.zeros_like(w)]
+
+        self.layers = None
+        self.w = w
+
+    def forward(self, raw_xs):
+        """
+        Args:
+            raw_xs: batch raw sequence (default batch form) | [N,T]
+                raw_xs[:, t]: raw chunk raw_x_t | [N,]
+        Returns:
+            xs: batch sequence | [N,T,D]
+                xs[:, t, :]: chunk x_t | [N,D]
+                    raw_x_t가 행의 indices가 되어 w[V,D]로부터 indexing한다.
+        """
+        N, T = raw_xs.shape
+        V, D = self.w.shape
+
+        self.layers = []
+        xs = np.empty((N, T, D), dtype='f')
+
+        for t in range(T):
+            layer = Embedding(self.w)
+            xs[:, t, :] = layer.forward(indices=raw_xs[:, t])
+            self.layers.append(layer)
+
+        return xs
+
+    def backward(self, dxs):
+        """
+        Args:
+            dxs: [N,T,D]
+                dxs[:, t, :] : [N,D]
+        """
+        N, T, D = dxs.shape
+
+        grad = 0
+        for t in range(T):
+            layer = self.layers[t]
+            layer.backward(dxs[:, t, :])
+            grad += layer.grads[0]
+            """reversed(range(T))
+            Embedding node는 time dependency가 없는 일반적인(병럴적) copy gate를 통과한 w를 사용한다.
+            따라서 reversed()는 불필요하다.
+            """
+
+        self.grads[0][...] = grad
+
+        return None

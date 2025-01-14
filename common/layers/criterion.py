@@ -188,8 +188,10 @@ class TimeSoftmaxWithLoss:
             dls[:, t, :] = layer.backward(dy[:, t, :])
             """reversed(range(T))
             Affine node의 적용부터는, 고로 이어지는 SoftmaxWithLoss node의 적용에는
-            time dependency가 사라진 일반적인(병럴적) copy gate를 통과한 w, h가 사용된다.
+            time dependency가 사라지고 병렬적으로 진행한다.
             따라서 reversed()는 불필요하다.
+            cf. 이 경우 params가 없으니 copy gate를 통과할 것도 없으며 fpass에서 (x와 target 모두) 각기 다른 입력이므로
+                그냥 node가 여럿 있다고 생각하면 된다. 
             """
 
         return dls
