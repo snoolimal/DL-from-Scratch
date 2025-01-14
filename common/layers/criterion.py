@@ -2,6 +2,7 @@
 loss.py
 """
 
+from typing import Optional, List
 from config import np
 from common.functions import sigmoid, softmax, cross_entropy_error
 from common.layers.embedding import EmbeddingDot
@@ -126,3 +127,130 @@ class NegativeSamplingLoss:
             dh += embed_dot_layer.backward(dscore)
 
         return dh
+
+
+class TimeSoftmaxWithLoss:
+    """
+    TimeRNN에서 Time류 node를 만든 것과 마찬가지로
+    SoftmaxWithLoss node를 T개 준비하여 (timestep 순서대로) 각 chunk를 처리하면 된다.
+    """
+    def __init__(self):
+        self.params, self.grads = [], []
+
+        self.ls = None
+        self.layers: Optional[List] = None
+
+    def forward(self, ls, ts):
+        """
+        Args:
+            ls: [N,T,V]
+                chunk l_t: ls[:, t, :] | [N,V]
+            ts: [N,T,V]
+                One-hot form이므로 axis 2는 V이다.
+        ---
+        Returns:
+            loss: loss_t T개의 평균 | scalar
+                loss_t: scalar
+                    Chunk l_t를 구성하는 N개의 (timestep t의) single vector 각각에 대해
+                    (one-hot form의 target vector로) 구한 softmax loss N개의 평균이다.
+                    cf. eq 5.11 (p.225(6))
+                        책은 batch size=1로 두고 설명하였으므로 loss_t가 L_t에 해당한다.
+        """
+        N, T, V = ls.shape
+
+        self.ls = ls
+
+        loss = 0
+        for t in range(T):
+            layer = SoftmaxWithLoss()
+            loss_t = layer.forward(ls[:, t, :], ts[:, t])
+            loss += loss_t
+            self.layers.append(layer)
+        loss /= T
+
+        return loss
+
+    def backward(self, dy=1):
+        """
+        Args:
+            dy: 1 matrix | [N,T,V]
+        ---
+        Returns:
+            dls: [N,T,V]
+        """
+        N, T, V = self.ls.shape
+
+        dls = np.empty((N, T, V), dtype='f')
+        dy = np.ones((N, T, V), dtype='f')
+        dy *= (1 / T)
+        for t in range(T):
+            layer = self.layers[t]
+            dls[:, t, :] = layer.backward(dy[:, t, :])
+            """reversed(range(T))
+            Affine node의 적용부터는, 고로 이어지는 SoftmaxWithLoss node의 적용에는
+            time dependency가 사라진 일반적인(병럴적) copy gate를 통과한 w, h가 사용된다.
+            따라서 reversed()는 불필요하다.
+            """
+
+        return dls
+
+
+class SmartTimeSoftmaxWithLoss:
+    def __init__(self):
+        self.params, self.grads = [], []
+        self.cache = None
+        self.ignore_label = -1
+
+    def forward(self, ls, ts):
+        """
+        Args:
+            ls: [N,T,V]
+                chunk l_t: ls[:, t, :] | [N,V]
+            ts: [N,T,V] -> [N,T]
+                One-hot form이므로 axis 2는 V이다. Class idx form으로 변환해 사용한다.
+        ---
+        Returns:
+            loss: scalar
+        """
+        N, T, V = ls.shape
+
+        # target ts가 one-hot form이라면 idx form으로 변환
+        if ts.ndim == 3:
+            ts = ts.argmax(axis=2)          # [N,T]
+
+        mask = (ts != self.ignore_label)    # [N,T]
+
+        # batch 속 sequence의 모든 single vector [V,] 단위로 한번에 다룸
+        ls = ls.reshape(N*T, V)                 # [N*T,V]
+        ts = ts.reshape(N*T)                    # [N*T,]
+        mask = mask.reshape(N*T)                # [N*T,]
+
+        _ys = softmax(ls)                       # [N*T,V]
+        ys = np.log(_ys[np.arange(N*T), ts])    # [N*T,V], 각 single vector의 정답 idx만 log 먹여 ys로 (오답 indices는 +0)
+        ys *= mask                              # ignore_label에 해당하는 input vector의 loss는 0으로 (-1 indexing dumping도)
+        loss = np.negative(np.sum(ys))          # scalar
+        loss /= mask.sum()                      # get avg
+
+        self.cache = (ts, _ys, mask, (N, T, V))
+
+        return loss
+
+    def backward(self, dy=1):
+        """
+        Args:
+            dy: dL = 1 (scalar)
+        ---
+        Returns:
+            dls: [N,T,V]
+        """
+        ts, _ys, mask, (N, T, V) = self.cache
+
+        _ys[np.arange(N*T), ts] -= 1    # [N*T,V], 각 single vector의 정답 idx만 -1
+        dloc = _ys / mask.sum()         # [N*T,V]
+
+        dls = dloc * dy                 # [N*T,V]
+        dls *= mask[:, np.newaxis]      # [N*T,V], ignore_label에 해당하는 input vector의 gradient는 0으로
+
+        dls = dls.reshape(N, T, V)
+
+        return dls
