@@ -35,7 +35,7 @@ class SimpelRnnlm(Model):
         # model architecture
         self.layers = [
             TimeEmbedding(w_embed),
-            TimeRNN(wx, wh, b, stateful=True),  # stateful=True for truncated BPTT
+            TimeRNN(wx, wh, b, stateful=True, plot_grad=True),  # stateful=True for truncated BPTT
             TimeAffine(w_aff, b_aff)
         ]
         self.criterion = TimeSoftmaxWithLoss()
@@ -46,8 +46,8 @@ class SimpelRnnlm(Model):
             self.params += layer.params
             self.grads += layer.grads
 
-        # for reset hidden state
-        self.rnn_layer = self.layers[1]
+        # for reset hidden state(stateful), plot_grad
+        self.plot_grad_layer = self.rnn_layer = self.layers[1]
 
     def forward(self, xs, ts):
         for layer in self.layers:

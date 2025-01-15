@@ -104,6 +104,10 @@ class TimeTrainer:
         self.optimizer = optimizer
 
         self.loss_list, self.ppl_list = [], []      # instance에 보관
+        if model.plot_grad_layer is not None:
+            self.epoch_dh, self.epoch_dwh  = [], []
+        else:
+            self.epoch_dh = None
 
     def fit(
             self, x, t,
@@ -118,14 +122,21 @@ class TimeTrainer:
         dataloader = TimeDataLoader(seq_len, x, batch_size, t)
 
         pbar = tqdm(range(1, max_epoch + 1), position=0, leave=True)
+        if model.plot_grad_layer is not None:
+            self.epoch_dh, self.epoch_dwh = [], []
         for epoch in pbar:
             total_loss, total_ppl = 0., 0.
+            # batch_dh, batch_dwh = [], []
             for batch_idx, (batch_x, batch_t) in enumerate(dataloader):
                 pbar.set_description(desc=f'Epoch {epoch}')
 
                 loss = model.forward(batch_x, batch_t)
                 ppl = np.exp(loss)
                 model.backward()
+                # TODO: 확인 필요
+                #   TimeRNN에서 grad 누적을 처리했지만
+                #   그건 batch 1개에 대한 것이었으니 두 번째 batch부터는 adjust_grad 발동 되는듯? (model instance는 처음 생성한 1개)
+                #   디버깅에서 확인해 보자.
                 params, grads = adjust_grads(model.params, model.grads, max_grad)
                 optimizer.step(params, grads)
 
@@ -138,12 +149,25 @@ class TimeTrainer:
                     f"batch {batch_idx + 1}/{len(dataloader)} ppl: {ppl:.4f}"
                 )
 
+                # if self.epoch_dh is not None:
+                #     batch_dh.append(model.plot_grad_layer.dh_list)   # [T,]가 총 B개 (batch 총 B개)
+                #     batch_dwh.append(model.plot_grad_layer.dwh_list)
+
             avg_loss = total_loss / len(dataloader)
             avg_ppl = total_ppl / len(dataloader)
             if hasattr(avg_loss, 'get'): avg_loss = avg_loss.get()
             if hasattr(avg_ppl, 'get'): avg_ppl = avg_ppl.get()
             self.loss_list.append(float(avg_loss))
             self.ppl_list.append(float(avg_ppl))
+
+        #     self.epoch_dh.append(np.array(batch_dh))    # epoch마다 [B,T]가 담김
+        #     self.epoch_dwh.append(np.array(batch_dwh))
+        # self.epoch_dh, self.epoch_dwh = np.array(self.epoch_dh), np.array(self.epoch_dwh)   # [E,B,T]
+
+    def plot_grad(self):
+        dh_list = np.array(self.model.plot_grad_layer.dh_list) # max_epoch * B * T
+        plt.plot(dh_list[::100])    # plt.plot(dh_list[np.arange(0, len(dh_list), 100)])
+        plt.show()
 
     def plot(self, ylim=None):
         x = numpy.arange(len(self.ppl_list))

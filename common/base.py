@@ -7,6 +7,7 @@ from utils import cupy_util as cuu
 class Model:
     def __init__(self):
         self.params, self.grads = None, None
+        self.plot_grad_layer = None
 
     def forward(self, *args):
         raise NotImplementedError

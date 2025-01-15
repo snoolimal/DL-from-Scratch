@@ -135,7 +135,7 @@ class TimeRNN:
         0부터 T-1까지의 timestep 각각에 걸리는 input vectors를 unit data로 하여 N번 처리해
     실현한다.
     """
-    def __init__(self, wx, wh, b, stateful=False):
+    def __init__(self, wx, wh, b, stateful=False, plot_grad=False):
         """
         Instance Variables:
             self.layers: RNN block 속 RNN nodes 그릇
@@ -161,6 +161,8 @@ class TimeRNN:
         self.stateful = stateful
         self.h = None
         self.dh = None
+
+        self.dh_list, self.dwh_list = ([], []) if plot_grad else (None, None)
 
     def forward(self, xs):
         """
@@ -219,6 +221,7 @@ class TimeRNN:
         dxs = np.empty((N, T, D), dtype='f')
         dh = 0              # truncated BPTT라면 첫 dh_next는 0
         grads = [0, 0, 0]   # dwx, dwh, db
+        # self.dh_list, self.dwh_list = ([], []) if self.dh_list is not None else (None, None)
         for t in reversed(range(T)):
             layer = self.layers[t]
             dx_t, dh = layer.backward(dhs[:, t, :] + dh)    # dx_t, dh_prev = layer.backward(dh_t + dh_next)
@@ -236,6 +239,13 @@ class TimeRNN:
             를 얻는다.
             """
 
+            # check whether gradient is vanished or exploded
+            if self.dh_list is not None:
+                # dh는 첫 dh인 dhs[:, t, :]에 wh'가 T번 곱해진 결과
+                # 각 시점 dh[N,H], 총 T개
+                dh_norm = np.mean(np.sqrt(np.sum(dh ** 2, axis=1)))     # scalar
+                self.dh_list.append(dh_norm)    # 길이 T
+
             # RNN block의 downstream gradient를 update
             for i, grad in enumerate(layer.grads):  # timestep t의 RNN node에서 얻은 dwx, dwh, db
                 grads[i] += grad                    # 모든 RNN node는 동일한 하나의 RNN node, param은 재사용
@@ -250,10 +260,18 @@ class TimeRNN:
                 로 저장한 downstream gradient를 꺼내온다. (self = layer = RNN)
                 """
 
+                if (i == 1) and (self.dwh_list is not None):
+                    dwh = grads[i]
+                    # 각 시점의 dwh[H,H], 총 T개
+                    dwh_norm = np.sqrt(np.sum(dwh ** 2))     # scalar
+                    self.dwh_list.append(dwh_norm)  # 길이 T
+
         # RNN block의 최종 downstream gradient towards optimizer를 저장
         for i, grad in enumerate(grads):    # RNN block의 dwx, dwh, db
             self.grads[i][...] = grad
         self.dh = dh
+
+        # self.dh_list, self.dwh_list = np.array(self.dh_list), np.array(self.dwh_list)
 
         return dxs
 

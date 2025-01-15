@@ -8,7 +8,7 @@ from common.optimizer import SGD
 
 def main():
     # dataset
-    corpus_size = 1000
+    corpus_size = 3000
     corpus, _, _ = ptb.load_data('train')
     corpus = corpus[:corpus_size]
     # corpus = np.arange(17)
@@ -37,6 +37,7 @@ def main():
     # training
     trainer.fit(x, t, seq_len, max_epoch, batch_size)
     trainer.plot()
+    trainer.plot_grad()
 
 
 def debug():
