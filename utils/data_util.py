@@ -39,32 +39,38 @@ class TimeDataLoader(DataLoader):
         self.seq_len = seq_len
         self.padding = padding  # TimeSoftmaxWithLoss()의 ignore_label로 지정한 값과 같아야
 
+        self.offsets = None
+
+        # TODO: 이 pad_data()가 필요한가? 어차피 다시 처음으로 돌아가도록 처리했는데.. 아우 헷갈려라.
+        # self.pad_data()                                         # 넘치면 padding으로 예외 처리
+        self.data_size = len(self.x)  # self.x는 padding된 전체 sequence
+        self.jump = self.data_size // self.batch_size
+
     def __iter__(self):
         # self.indices = np.arange(len(self.x))
         # if self.shuffle:
         #     np.random.shuffle(self.indices)
 
-        self.pad_data()                                         # 넘치면 padding으로 예외 처리
-        data_size = len(self.x)                                 # self.x는 padding된 전체 sequence
-        jump = data_size // self.batch_size
-        offsets = [i * jump for i in range(self.batch_size)]    # 첫 chunk(의 indices) (각 raw batch의 시작점)
+        if self.offsets is None:
+            offsets = [i * self.jump for i in range(self.batch_size)]    # 첫 chunk(의 indices) (각 raw batch의 시작점)
+            self.offsets = np.array(offsets)
 
-        offsets = np.array(offsets)
-        batch_x = np.empty((self.batch_size, self.seq_len), dtype='i')
-        batch_t = np.empty_like(batch_x, dtype='i')
-        for t in range(self.seq_len):
-            chunk_indices = offsets
-            batch_x[:, t] = self.x[chunk_indices]
+        for _ in range(self.jump + 1):
+            batch_x = np.empty((self.batch_size, self.seq_len), dtype='i')
+            batch_t = np.empty_like(batch_x, dtype='i') if self.t is not None else None
+
+            for t in range(self.seq_len):
+                batch_indices = (self.offsets + t) % self.data_size       # % data_size를 추가해 끝나면 다시 처음으로 가는 작동 처리!
+                batch_x[:, t] = self.x[batch_indices]
+                if self.t is not None:
+                    batch_t[:, t] = self.t[batch_indices]
+
+            self.offsets += self.seq_len
+
             if self.t is not None:
-                batch_t[:, t] = self.t[chunk_indices]
-
-            offsets += 1
-
-        if self.t is not None:
-            yield batch_x, batch_t
-        else:
-            yield batch_x
-
+                yield batch_x, batch_t
+            else:
+                yield batch_x
 
     def pad_data(self):
         _data_size = len(self.x)
@@ -74,3 +80,6 @@ class TimeDataLoader(DataLoader):
             self.x = np.concatenate([self.x, np.full((pad_size,), self.padding)], axis=0)
             if self.t is not None:
                 self.t = np.concatenate([self.t, np.full((pad_size,), self.padding)], axis=0)
+
+    def __len__(self):
+        return (len(self.x) + self.batch_size - 1) // self.batch_size

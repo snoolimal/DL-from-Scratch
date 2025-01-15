@@ -8,8 +8,9 @@ from common.optimizer import SGD
 
 def main():
     # dataset
-    corpus, word_to_id, id_to_word = ptb.load_data('train')
-    corpus_size = 1000
+    # corpus, _, _ = ptb.load_data('train')
+    corpus = np.arange(1000)
+    corpus_size = 100
     corpus = corpus[:corpus_size]
     x, t = corpus[:-1], corpus[1:]
     vocab_size = int(max(corpus) + 1)   # 단어 ID는 0번부터니까
@@ -23,8 +24,8 @@ def main():
     model = SimpelRnnlm(vocab_size, wordvec_size, hidden_size)
 
     # training hyperparams
-    max_epoch = 100
     batch_size = 10
+    max_epoch = 100
     lr = 1e-1
 
     # trainer
@@ -36,5 +37,10 @@ def main():
     trainer.plot()
 
 
+def debug():
+    pass
+
+
 if __name__ == '__main__':
     main()
+    # debug()

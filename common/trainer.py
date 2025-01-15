@@ -124,6 +124,7 @@ class TimeTrainer:
                 pbar.set_description(desc=f'Epoch {epoch}')
 
                 loss = model.forward(batch_x, batch_t)
+                ppl = np.exp(loss)
                 model.backward()
                 params, grads = adjust_grads(model.params, model.grads, max_grad)
                 optimizer.step(params, grads)
@@ -134,7 +135,7 @@ class TimeTrainer:
                 pbar.set_postfix_str(
                     f"Avg loss: {round(self.loss_list[-1], 4) if self.loss_list else 'N/A'}, "
                     f"Avg ppl: {round(self.ppl_list[-1], 4) if self.ppl_list else 'N/A'}, "
-                    f"batch {batch_idx + 1}/{len(dataloader)} loss: {loss:.4f}"
+                    f"batch {batch_idx + 1}/{len(dataloader)} ppl: {ppl:.4f}"
                 )
 
             avg_loss = total_loss / len(dataloader)
