@@ -129,7 +129,7 @@ class NegativeSamplingLoss:
         return dh
 
 
-class TimeSoftmaxWithLoss:
+class _TimeSoftmaxWithLoss:
     """
     TimeRNN에서 Time류 node를 만든 것과 마찬가지로
     SoftmaxWithLoss node를 T개 준비하여 (timestep 순서대로) 각 chunk를 처리하면 된다.
@@ -197,7 +197,7 @@ class TimeSoftmaxWithLoss:
         return dls
 
 
-class SmartTimeSoftmaxWithLoss:
+class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
         self.cache = None
@@ -210,6 +210,7 @@ class SmartTimeSoftmaxWithLoss:
                 chunk l_t: ls[:, t, :] | [N,V]
             ts: [N,T,V] -> [N,T]
                 One-hot form이므로 axis 2는 V이다. Class idx form으로 변환해 사용한다.
+                Class idx form이면 그대로 사용하면 되고.
         ---
         Returns:
             loss: scalar

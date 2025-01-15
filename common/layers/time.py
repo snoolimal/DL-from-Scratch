@@ -12,7 +12,7 @@ class RNN:
     N: batch size
     H: hidden state h의 dimension
         h: [N,H]
-    D: single (timestep의) input vector x의 dimension
+    D: (single timestep의) input vector x의 dimension
         x: [N,D]
     ---
     e.g. sequence = batch = (x0, ..., x15)
@@ -108,7 +108,7 @@ class TimeRNN:
     B: raw batch size
     T: sequence length
         T개의 RNN cell이 모여 RNN block을 구성한다.
-    N: batch size = B / T
+    N: batch size = (B + T - 1) // T (B // T + (B % T))
     H: hidden state h의 dimension
         h: [N,H]
     D: single (timestep의) input vector x의 dimension
@@ -116,8 +116,10 @@ class TimeRNN:
     ---
     e.g. sequence = (x0, ..., x15)
     B = 8
-        raw batch 1: (x0, ..., x7)
-        raw batch 2: (x8, ..., x15)
+        raw batch 1: ((x0, ..., x3,
+                       x4, ..., x7))
+        raw batch 2: ((x8, ..., x11),
+                      (x12, ..., x15))
     T = 4 -> N = 2
         batch 1: ((x0, x1, x2, x3),
                   (x8, x9, x10, x11))
@@ -126,7 +128,7 @@ class TimeRNN:
         cf. 길이 T의 sequence가 unit data이므로 N은 batch size가 맞다.
     (x0, -> (x1, -> ... (x3, -> | (x4, -> ... (x7,
      x8)     x9)         x11)      x12)        x15)
-    순서로 처리된다. (각각을 chunk라 부르자)
+    순서로 처리된다. Batch 단위로 한 번에 입력되며, batch 안에서의 처리 순서인 각각을 chunk라 부르자.
     Batch의 unit data는 길이 T의 sequence이며 이들은 "순서대로" 처리되어야 한다.
     따라서 batch 하나의 처리는
         N*T를 batch size로, single input vector를 unit data로 하여 그들을 순서 없이 처리하는 것이 아닌
@@ -262,7 +264,7 @@ class TimeRNN:
         self.h = None
 
 
-class TimeAffine:
+class _TimeAffine:
     """
     TimeRNN에서 Time류 node를 만든 것과 마찬가지로
     Affine node를 T개 준비하여 (timestep 순서대로) 각 chunk를 처리하면 된다.
@@ -334,7 +336,7 @@ class TimeAffine:
         return dhs
 
 
-class SmartTimeAffine:
+class TimeAffine:
     """
     다루는 object들의 shape을 잘 만져서 더 빠르게 작동하도록 효율적으로 구현한다.
     """
@@ -361,7 +363,7 @@ class SmartTimeAffine:
         self.hs = hs
 
         w, b = self.params
-        N, T, H = hs.reshape
+        N, T, H = hs.shape
 
         rhs = hs.reshape(N*T, -1)   # [N*T,H]
         rls = np.dot(rhs, w) + b    # np.dot([N*T,H], [H,V]) = [N*T,V]

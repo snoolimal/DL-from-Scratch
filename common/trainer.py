@@ -1,9 +1,10 @@
 import numpy
-import time
+# import time
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from config import np
 from common.base import Model, Optimizer
-from utils import DataLoader, adjust_grads
+from utils import DataLoader, TimeDataLoader, adjust_grads
 
 
 class Trainer:
@@ -15,7 +16,7 @@ class Trainer:
         self.model = model
         self.optimizer = optimizer
 
-        self.loss_list = []
+        self.loss_list = None
 
     def fit(
             self, x, t,
@@ -91,3 +92,75 @@ class Trainer:
         plt.ylabel('Avg Train Loss')
 
         plt.show()
+
+
+class TimeTrainer:
+    def __init__(
+            self,
+            model: Model,
+            optimizer: Optimizer
+    ):
+        self.model = model
+        self.optimizer = optimizer
+
+        self.loss_list, self.ppl_list = [], []      # instance에 보관
+
+    def fit(
+            self, x, t,
+            seq_len: int,
+            max_epoch: int = 10,
+            batch_size: int = 32,
+            max_grad: bool = None
+    ):
+        model = self.model
+        optimizer = self.optimizer
+
+        dataloader = TimeDataLoader(seq_len, x, batch_size, t)
+
+        pbar = tqdm(range(1, max_epoch + 1), position=0, leave=True)
+        for epoch in pbar:
+            total_loss, total_ppl = 0, 0
+            for batch_idx, (batch_x, batch_t) in enumerate(dataloader):
+                pbar.set_description(desc=f'Epoch {epoch}')
+
+                loss = model.forward(batch_x, batch_t)
+                model.backward()
+                params, grads = adjust_grads(model.params, model.grads, max_grad)
+                optimizer.step(params, grads)
+
+                total_loss += loss
+                total_ppl += np.exp(total_loss / (batch_idx + 1))
+
+                pbar.set_postfix_str(
+                    f"Avg loss: {round(self.loss_list[-1], 4) if self.loss_list else 'N/A'}, "
+                    f"Avg ppl: {round(self.ppl_list[-1], 4) if self.ppl_list else 'N/A'}, "
+                    f"batch {batch_idx + 1}/{len(dataloader)} loss: {loss:.4f}"
+                )
+
+            avg_loss = total_loss / len(dataloader)
+            avg_ppl = total_ppl / len(dataloader)
+            if hasattr(avg_loss, 'get'): avg_loss = avg_loss.get()
+            if hasattr(avg_ppl, 'get'): avg_ppl = avg_ppl.get()
+            self.loss_list.append(float(avg_loss))
+            self.ppl_list.append(float(avg_ppl))
+
+    def plot(self, ylim=None):
+        x = numpy.arange(len(self.ppl_list))
+        min_ppl = min(self.ppl_list)
+        min_epoch = int(numpy.argmin(self.ppl_list))
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(x, self.ppl_list, label='train', color='#1f77b4')
+        self._add_aesthetics(ylim, min_ppl, min_epoch, val_name='Perplexity')
+
+        plt.show()
+
+    @staticmethod
+    def _add_aesthetics(ylim, min_val, min_epoch, val_name='Loss'):
+        if ylim is not None: plt.ylim(*ylim)
+        plt.axhline(y=min_val, color='r', linestyle='--', alpha=0.5, linewidth=0.5)
+        plt.axvline(x=min_epoch, color='r', linestyle='--', alpha=0.5, linewidth=0.5)
+        plt.annotate(f'({min_epoch + 1}, {min_val:.2f})',
+                     xy=(min_epoch, min_val), xytext=(-40, 20), textcoords='offset points', color='red')
+        plt.xlabel('Epoch')
+        plt.ylabel(f'Avg Train {val_name}')

@@ -13,7 +13,10 @@ def adjust_grads(params, grads, max_norm):
 
 
 def sum_duplicated_grads(params, grads):
-    #TODO: RNN까지 보고 SimpleCBOW, Skipgram 고려해 이 부분 설명 수정 (각각의 loss를 딱히 뱉는 것 같진 않은디? 각각의 loss는 batch의 data들 각각에 대한 loss면 맞지만)
+    # TODO: RNN까지 보고 CBOW, Skipgram 고려해 이 부분 정리
+    #  일반적인 copy gate인 병렬 vs. 시간 의존성을 갖는 copy gate인 직렬 vs. 그냥 여러 node로 취급도 가능한 criterion
+    #  그러나 원리 자체는 chain rule에서의 미분의 선형성으로 동일하므로 뭐든 grad는 합산됨
+    #  인 듯?
     """
     여러 nodes에서 gradient가 계산되는 공유된 weight가 있다면 그들을 모아 준다.
     Optimizer의 step()의 params argument에 중복된 weight가 존재한다면 그들의 gradient를 더해 하나로:
