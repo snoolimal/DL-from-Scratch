@@ -55,7 +55,7 @@ class TimeDataLoader(DataLoader):
             offsets = [i * self.jump for i in range(self.batch_size)]    # 첫 chunk(의 indices) (각 raw batch의 시작점)
             self.offsets = np.array(offsets)
 
-        for _ in range(self.jump + 1):
+        for _ in range(len(self)):
             batch_x = np.empty((self.batch_size, self.seq_len), dtype='i')
             batch_t = np.empty_like(batch_x, dtype='i') if self.t is not None else None
 
@@ -82,4 +82,4 @@ class TimeDataLoader(DataLoader):
                 self.t = np.concatenate([self.t, np.full((pad_size,), self.padding)], axis=0)
 
     def __len__(self):
-        return (len(self.x) + self.batch_size - 1) // self.batch_size
+        return (self.data_size + (self.batch_size * self.seq_len) - 1) // (self.batch_size * self.seq_len)

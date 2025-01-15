@@ -119,7 +119,7 @@ class TimeTrainer:
 
         pbar = tqdm(range(1, max_epoch + 1), position=0, leave=True)
         for epoch in pbar:
-            total_loss, total_ppl = 0, 0
+            total_loss, total_ppl = 0., 0.
             for batch_idx, (batch_x, batch_t) in enumerate(dataloader):
                 pbar.set_description(desc=f'Epoch {epoch}')
 
