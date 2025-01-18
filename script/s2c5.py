@@ -6,7 +6,7 @@ from common.optimizer import SGD
 
 def main():
     # dataset
-    corpus_size = 3000
+    corpus_size = 1000
     corpus, _, _ = ptb.load_data('train')
     corpus = corpus[:corpus_size]
     x, t = corpus[:-1], corpus[1:]
