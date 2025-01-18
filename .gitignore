@@ -1,3 +1,4 @@
-/annotation
-/data
+/annotation/*
+!/annotation/background
+/data/
 /model/storage/
