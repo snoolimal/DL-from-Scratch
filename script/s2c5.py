@@ -1,5 +1,3 @@
-import numpy as np
-
 from data import ptb
 from model import SimpelRnnlm
 from common.trainer import TimeTrainer
