@@ -1,2 +1,3 @@
-/model/storage/_cbow_params_repo.pkl
-/model/storage/_cbow_params.pkl
+/annotation
+/data
+/model/storage/
