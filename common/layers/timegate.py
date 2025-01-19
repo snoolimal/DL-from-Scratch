@@ -166,7 +166,8 @@ class TimeLSTM:
         self.layers = []
         hs = np.empty((N, T, H), dtype='f')
 
-        # truncation이 없거나 truncation이 있다면 그 안에서 첫 timestep일 때
+        # LSTM blocks의 time dependency를 유지하거나 처음으로 LSTM block을 생성했을 때
+        # cf. LSTM blocks의 time dep을 유지하지 않을 것이라면 dataloder에서 xs를 꺼내올 때마다 model.reset_state()를 호출하겠지.
         if not self.stateful or self.h is None:
             self.h = np.zeros((N, H), dtype='f')
         if not self.stateful or self.c is None:

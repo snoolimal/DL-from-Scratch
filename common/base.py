@@ -1,5 +1,6 @@
 import os
 import pickle
+from pathlib import Path
 from config import *
 from utils import cupy_util as cuu
 
@@ -8,6 +9,7 @@ class Model:
     def __init__(self):
         self.params, self.grads = None, None
         self.plot_grad_layer = None
+        self.rood_dir = Path(__file__).resolve().parents[1]
 
     def forward(self, *args):
         raise NotImplementedError
@@ -23,6 +25,7 @@ class Model:
         if GPU:
             params = [cuu.to_cpu(p) for p in params]
 
+        file_name = str(self.rood_dir / 'model' / 'storage' / file_name)
         with open(file_name, 'wb') as f:
             pickle.dump(params, f)
 
@@ -31,12 +34,16 @@ class Model:
             file_name = self.__class__.__name__ + '.pkl'
 
         if '/' in file_name:
-            file_name = file_name.replace('/', os.sep)
+            # file_name = file_name.replace('/', os.sep)
+            file_name = Path(file_name)
 
-        if not os.path.exists(file_name):
-            raise IOError('No file: ' + file_name)
+        file_name = self.rood_dir / 'model' / 'storage' / file_name
+        # if not os.path.exists(file_name):
+        #     raise IOError('No file: ' + file_name)
+        if not Path.exists(file_name):
+            raise IOError('No file: ' + str(file_name))
 
-        with open(file_name, 'rb') as f:
+        with open(str(file_name), 'rb') as f:
             params = pickle.load(f)
 
         params = [p.astype('f') for p in params]
