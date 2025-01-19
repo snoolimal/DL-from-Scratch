@@ -106,6 +106,10 @@ def clip_grads(grads, max_norm):
     ---
     cf. Weight matrix의 eigen value가 1보다 크다면 bpass를 수행할 때마다 그러한 eigen value가 반복적으로 곱해짐에 따라
         gradient의 크기가 지수적으로 증가한다.
+    ---
+    Pseudo code
+    if ||g|| > threshold:
+        g = (threshold/||g||)g
     """
     total_norm = 0
     for grad in grads:
