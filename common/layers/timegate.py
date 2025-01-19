@@ -1,4 +1,4 @@
-import numpy as np
+from config import np
 from common.functions import matmul, sigmoid, tanh
 
 
@@ -179,6 +179,8 @@ class TimeLSTM:
             self.h, self.c = layer.forward(x_t, self.h, self.c)     # h[N,H], c[N,H]
             hs[:, t, :] = self.h
 
+            self.layers.append(layer)
+
         return hs
 
     def backward(self, dhs):
@@ -210,6 +212,8 @@ class TimeLSTM:
 
         for i, grad in enumerate(grads):
             self.grads[i][...] = grad
+
+        return dxs
 
     def set_state(self, h, c=None):
         self.h, self.c = h, c
