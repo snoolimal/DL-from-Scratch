@@ -5,7 +5,7 @@ from common.layers.timegate import *
 from common.layers.criterion import TimeSoftmaxWithLoss
 
 
-class Rnnlm(Model):
+class RnnLM(Model):
     """
     Computation Graph
      raw_xs[N,T] -> Embedding Block -> xs[N,T,D] -> LSTM Block -> hs[N,T,H] -> Affine Block -> ys[N,T,V]
@@ -55,6 +55,7 @@ class Rnnlm(Model):
             self.params += layer.params
             self.grads += layer.grads
 
+        # cache some layers
         self.lstm_layer = self.layers[1]
 
     def predict(self, xs):
@@ -90,3 +91,75 @@ class Rnnlm(Model):
 
     def reset_state(self):
         self.lstm_layer.reset_state()
+
+
+class BetterRnnLM(Model):
+    """
+    1. Deeper LSTM Layer
+       LSTM layer를 2층으로 다층화
+    2. Add Dropout Layer
+       TODO: 변형 Dropout
+    3. Add Weight Tying
+       Embedding layer와 Affine layer에서 weight를 공유한다.
+    """
+    def __init__(self, vocab_size, wordvec_size, hidden_size, dropout_ratio):
+        super().__init__()
+
+        V, D, H = vocab_size, wordvec_size, hidden_size
+        rn = np.random.randn
+
+        # weight initialization (Xavier)
+        w_embed = (rn(V, D) / 100).astype('f')
+        wx1 = (rn(D, 4 * H) / np.sqrt(D)).astype('f')
+        wh1 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
+        b1 = np.zeros(4 * H).astype('f')
+        wx2 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')   # [N,H]인 [:, t, :]와의 연산
+        wh2 = (rn(H, 4 * H) / np.sqrt(H)).astype('f')
+        b2 = np.zeros(4 * H).astype('f')
+        ba = np.zeros(V).astype('f')
+
+        # model architecture
+        self.layers = [
+            TimeEmbedding(w_embed),
+            TimeDropout(dropout_ratio),
+            TimeLSTM(wx1, wh1, b1, stateful=True),      # [N,T,H]
+            TimeDropout(dropout_ratio),                 # [N,T,H]
+            TimeLSTM(wx2, wh2, b2, stateful=True),
+            TimeDropout(dropout_ratio),
+            TimeAffine(w_embed.T, ba)
+        ]
+        self.criterion = TimeSoftmaxWithLoss()
+
+        # computation graph
+        self.params, self.grads = [], []
+        for layer in self.layers:
+            self.params += layer.params
+            self.grads += layer.grads
+
+        # cache some layers
+        self.lstm_layers = [self.layers[2], self.layers[4]]
+        self.drop_layers = [self.layers[1], self.layers[3], self.layers[5]]
+
+    def predict(self, xs, train_flag=False):
+        for layer in self.drop_layers:
+            layer.train_flag = train_flag
+
+        for layer in self.layers:
+            xs = layer.forward(xs)
+
+        return xs
+
+    def forward(self, xs, ts, train_flag=True):
+        ys = self.predict(xs, train_flag)
+        loss = self.criterion.forward(ys, ts)
+        return loss
+
+    def backward(self, dy=1):
+        dy = self.criterion.backward(dy)
+        for layer in reversed(self.layers):
+            dy = layer.backward(dy)
+        return dy
+
+    def reset_state(self):
+        for layer in self.lstm_layers:
+            layer.reset_state()

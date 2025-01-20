@@ -220,3 +220,24 @@ class TimeLSTM:
 
     def reset_state(self):
         self.h, self.c = None, None
+
+
+class TimeDropout:
+    def __init__(self, dropout_ratio=0.5):
+        self.params, self.grads = [], []
+        self.dropout_ratio = dropout_ratio
+        self.mask = None
+        self.train_flag = True
+
+    def forward(self, xs):
+        if self.train_flag:
+            flg = np.random.rand(*xs.shape) > self.dropout_ratio
+            # self.mask = flg.astype(np.float32)
+            scale = 1 / (1.0 - self.dropout_ratio)
+            self.mask = flg.astype(np.float32) * scale  # 이렇게 mask를 지정해야 backward에서 self.mask가 scaling 포함
+            # return xs * self.mask * scale
+        else:
+            return xs
+
+    def backward(self, dy):
+        return self.mask * dy
