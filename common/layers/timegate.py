@@ -234,7 +234,7 @@ class TimeDropout:
             flg = np.random.rand(*xs.shape) > self.dropout_ratio
             # self.mask = flg.astype(np.float32)
             scale = 1 / (1.0 - self.dropout_ratio)
-            self.mask = flg.astype(np.float32) * scale  # 이렇게 mask를 지정해야 backward에서 self.mask가 scaling 포함
+            self.mask = flg.astype(np.float32) * scale  # 이렇게 mask를 지정해야 backward에서 self.mask가 scaling 포함 (성능 차이 많이 나네...)
             # return xs * self.mask * scale
         else:
             return xs
