@@ -5,6 +5,7 @@ from common.base import Optimizer
 class SGD(Optimizer):
     """Stochastic Gradient Descent
     w <- w - (lr * dw)
+    매번 전체 dataset으로부터 새롭게 batch를 비복원 sampling하여(stochasticity) gradient step을 밟는다.
     """
     def __init__(self, lr=1e-2):
         super().__init__(lr=lr)

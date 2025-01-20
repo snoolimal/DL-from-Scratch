@@ -25,7 +25,7 @@ class Model:
         if GPU:
             params = [cuu.to_cpu(p) for p in params]
 
-        file_name = str(self.rood_dir / 'model' / 'storage' / file_name)
+        file_name = str(self.rood_dir / 'model' / 'storage' / (file_name + '.pkl'))
         with open(file_name, 'wb') as f:
             pickle.dump(params, f)
 
@@ -37,7 +37,7 @@ class Model:
             # file_name = file_name.replace('/', os.sep)
             file_name = Path(file_name)
 
-        file_name = self.rood_dir / 'model' / 'storage' / file_name
+        file_name = self.rood_dir / 'model' / 'storage' / (file_name + '.pkl')
         # if not os.path.exists(file_name):
         #     raise IOError('No file: ' + file_name)
         if not Path.exists(file_name):

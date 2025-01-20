@@ -18,18 +18,28 @@ def relu(x):
 
 
 def softmax(x):
-    # single data는 batch form으로 일반화
-    if x.ndim == 1:
-        x = x.reshape(-1, x.size)
+    if x.ndim == 2:
+        x = x - x.max(axis=1, keepdims=True)
+        x = np.exp(x)
+        x /= x.sum(axis=1, keepdims=True)
+    elif x.ndim == 1:
+        x = x - np.max(x)
+        x = np.exp(x) / np.sum(np.exp(x))
 
-    # overflow 방지 (계산 결과는 동일)
-    x -= x.max(axis=1, keepdims=True)
-
-    # softmax
-    x = np.exp(x)
-    y = x / x.sum(axis=1, keepdims=True)  # keepdims for broadcasting [N,C]/[N,1]=[N,C]
-
-    return y
+    return x
+    # 요렇게 하면 [1,C]가 나오네.
+    # # single data는 batch form으로 일반화
+    # if x.ndim == 1:
+    #     x = x.reshape(-1, x.size)
+    #
+    # # overflow 방지 (계산 결과는 동일)
+    # x -= x.max(axis=1, keepdims=True)
+    #
+    # # softmax
+    # x = np.exp(x)
+    # y = x / x.sum(axis=1, keepdims=True)  # keepdims for broadcasting [N,C]/[N,1]=[N,C]
+    #
+    # return y
 
 
 def cross_entropy_error(y, t):

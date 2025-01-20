@@ -1,2 +1,6 @@
 /model/storage/_cbow_params.pkl
 /model/storage/_cbow_params_repo.pkl
+/model/storage/_RNNLM.pkl
+/model/storage/BetterRnnLM.pkl
+/model/storage/Rnnlm.pkl
+/model/storage/_BetterRnnlm.pkl
