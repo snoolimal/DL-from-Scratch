@@ -1,6 +1,7 @@
 from .cbow import *
 from .rnnlm import *
 from .rnnlm_gen import *
+from .seq2seq import *
 from .simple_cbow import *
 from .simple_rnnlm import *
 from .simple_skipgram import *

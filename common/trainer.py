@@ -22,7 +22,7 @@ class Trainer:
             self, x, t,
             max_epoch: int = 10,
             batch_size: int = 32,
-            max_grad: bool = None
+            max_grad: float = None
     ):
         model = self.model
         optimizer = self.optimizer

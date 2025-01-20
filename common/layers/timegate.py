@@ -213,6 +213,8 @@ class TimeLSTM:
         for i, grad in enumerate(grads):
             self.grads[i][...] = grad
 
+        self.dh = dh
+
         return dxs
 
     def set_state(self, h, c=None):
